@@ -23,7 +23,7 @@ export class StandupsService {
     const { userId, date } = createStandupDto;
 
     // 1️⃣ Validate user
-    const user = await this.userService.findOne(userId);
+    const user = await this.userService.findOne(userId!);
 
     if (!user) {
       throw new NotFoundException('User not found');
