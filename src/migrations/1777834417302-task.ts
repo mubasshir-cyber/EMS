@@ -1,8 +1,17 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class Task1777834417302 implements MigrationInterface {
+  public async up(queryRunner: QueryRunner): Promise<void> {
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+      CREATE TYPE "task_status_enum" AS ENUM (
+        'inProgress',
+        'inReview',
+        'completed',
+        'critical'
+      );
+    `);
+
 
     await queryRunner.query(`
       CREATE TABLE "tasks" (

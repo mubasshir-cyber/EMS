@@ -1,6 +1,4 @@
-
-
 export type CurrentUser = {
-    id: string
-    role: string
-}
+  id: string;
+  role: string;
+};

@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './modules/user/user.module';
-// import { AuthModule } from './modules/auth/auth.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RoleModule } from './modules/role/role.module';
@@ -14,7 +13,6 @@ import { StandupsModule } from './modules/standups/standups.module';
 
 @Module({
   imports: [
-
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -26,11 +24,18 @@ import { StandupsModule } from './modules/standups/standups.module';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: ['dist/**/*.entity.js'], 
+      entities: ['dist/**/*.entity.js'],
       synchronize: false,
     }),
 
-    UserModule, AuthModule, RoleModule, ProjectModule, TaskModule, AttendanceModule, StandupsModule],
+    UserModule,
+    AuthModule,
+    RoleModule,
+    ProjectModule,
+    TaskModule,
+    AttendanceModule,
+    StandupsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

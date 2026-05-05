@@ -1,5 +1,5 @@
-import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Permission } from "./permission.entity";
+import { Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Permission } from './permission.entity';
 import { Role } from './role.entity';
 
 @Entity('role_permissions')
@@ -13,5 +13,5 @@ export class RolePermission {
 
   @ManyToOne(() => Permission, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'permission_id' })
-  Permission!: Permission;  
+  Permission!: Permission;
 }

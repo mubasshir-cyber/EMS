@@ -38,7 +38,7 @@ export class UserService {
     if (existingUser) {
       throw new BadRequestException('Email already exists');
     }
-    
+
     const user = this.repo.create({
       ...dto,
       email,
@@ -146,10 +146,9 @@ export class UserService {
     };
   }
 
-
   async updateLastLogin(userId: string) {
-  await this.repo.update(userId, {
-    lastLoginAt: new Date(),
-  });
-}
+    await this.repo.update(userId, {
+      lastLoginAt: new Date(),
+    });
+  }
 }

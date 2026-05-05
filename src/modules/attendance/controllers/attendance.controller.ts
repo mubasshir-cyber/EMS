@@ -25,9 +25,11 @@ export class AttendanceController {
   // @UseGuards(JwtAuthGuard)
   @Post('check-out')
   checkOut(@Req() req, @Body() dto: CheckOutDto) {
-    return this.attendanceService.checkOut(req.user.id,
+    return this.attendanceService.checkOut(
+      req.user.id,
       dto.location,
-      dto.earlyCheckoutReason);
+      dto.earlyCheckoutReason,
+    );
   }
 
   @Get('me')

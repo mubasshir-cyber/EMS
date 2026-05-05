@@ -104,8 +104,6 @@ export class TaskService {
     return this.findOne(saved.id);
   }
 
-  
-
   async findAll(page = 1, limit = 10) {
     const [tasks, total] = await this.taskRepo
       .createQueryBuilder('task')

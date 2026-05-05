@@ -1,9 +1,8 @@
-import { QueryRunner } from "typeorm";
-import { MigrationInterface } from "typeorm/browser";
+import { QueryRunner } from 'typeorm';
+import { MigrationInterface } from 'typeorm/browser';
 
 export class Role1777618541978 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-
     await queryRunner.query(`
       CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
     `);
