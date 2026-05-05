@@ -6,7 +6,6 @@ import {
   Param,
   Req,
   UseGuards,
-
 } from '@nestjs/common';
 import { AttendanceService } from '../services/attendance.service';
 import { CorrectionService } from '../services/correction.service';

@@ -1,7 +1,6 @@
 import {
   Controller,
   Post,
-  Body,
   Get,
   UseGuards,
   Request,
@@ -11,7 +10,6 @@ import {
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from 'src/common/guards/local-auth/local-auth.guard';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-
 
 @Controller('auth')
 export class AuthController {

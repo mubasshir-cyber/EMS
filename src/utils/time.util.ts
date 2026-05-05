@@ -1,4 +1,3 @@
-
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -32,9 +31,7 @@ export const todayIST = () => {
 export const formatIST = (date?: Date | string | null) => {
   if (!date) return null;
 
-  return dayjs(date)
-    .tz(IST)
-    .format('YYYY-MM-DD HH:mm:ss');
+  return dayjs(date).tz(IST).format('YYYY-MM-DD HH:mm:ss');
 };
 
 /**

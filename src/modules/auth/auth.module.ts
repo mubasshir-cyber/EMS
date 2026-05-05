@@ -14,13 +14,12 @@ import { Role } from '../role/entities/role.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role]),
-  JwtModule.registerAsync(jwtConfig.asProvider()),
-  ConfigModule.forFeature(jwtConfig),
-  UserModule,
-],
+    JwtModule.registerAsync(jwtConfig.asProvider()),
+    ConfigModule.forFeature(jwtConfig),
+    UserModule,
+  ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [AuthService]
-  
+  exports: [AuthService],
 })
 export class AuthModule {}

@@ -1,4 +1,3 @@
-
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -13,10 +12,8 @@ import {
 import { User } from '../../user/entities/user.entity';
 import { AttendanceStatus } from '../../../common/enums/AttendanceStatus.enum';
 
-
 @Entity('attendance')
-
-@Index(['userId', 'date'], { unique: true }) 
+@Index(['userId', 'date'], { unique: true })
 export class Attendance {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -67,6 +64,4 @@ export class Attendance {
 
   @UpdateDateColumn()
   updatedAt!: Date;
-
-} 
-
+}

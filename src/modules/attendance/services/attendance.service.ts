@@ -4,7 +4,6 @@ import { DataSource, Repository } from 'typeorm';
 import { nowIST, todayIST, formatIST } from 'src/utils/time.util';
 import dayjs from 'dayjs';
 import { Cron } from '@nestjs/schedule';
-import { IsNull } from 'typeorm';
 import { Attendance } from '../entities/attendance.entity';
 import { AttendanceStatus } from '../../../common/enums/AttendanceStatus.enum';
 

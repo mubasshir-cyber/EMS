@@ -12,6 +12,6 @@ import { Correction } from './entities/correction.entity';
   imports: [TypeOrmModule.forFeature([Attendance, Correction])],
   controllers: [AttendanceController, HrAttendanceController],
   providers: [AttendanceService, CorrectionService],
-  exports: [ AttendanceService]
+  exports: [AttendanceService],
 })
 export class AttendanceModule {}

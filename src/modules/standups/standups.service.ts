@@ -3,7 +3,6 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateStandupDto } from './dto/create-standup.dto';
 import { UpdateStandupDto } from './dto/update-standup.dto';

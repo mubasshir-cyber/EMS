@@ -1,9 +1,7 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class SeedRolesPermissions1777619090575 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-
+  public async up(queryRunner: QueryRunner): Promise<void> {
     // Insert roles
     await queryRunner.query(`
       INSERT INTO roles (name) VALUES
@@ -52,5 +50,4 @@ export class SeedRolesPermissions1777619090575 implements MigrationInterface {
   public async down(): Promise<void> {
     // optional rollback
   }
-
 }

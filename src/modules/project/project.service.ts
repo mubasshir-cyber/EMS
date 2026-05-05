@@ -9,7 +9,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../user/entities/user.entity';
-import { In, ILike } from 'typeorm';
+import { In } from 'typeorm';
 import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
@@ -21,13 +21,10 @@ export class ProjectService {
     private userRepo: Repository<User>,
   ) {}
 
-
-
-
   async create(dto: CreateProjectDto) {
     this.validateDates(dto.projectStartDate, dto.deadline);
     const users = await this.resolveUsers(dto.team);
-    
+
     if (!dto.deadline) {
       throw new BadRequestException('Deadline is required');
     }
@@ -37,7 +34,7 @@ export class ProjectService {
       projectStartDate: dto.projectStartDate
         ? new Date(dto.projectStartDate)
         : null,
-      deadline: new Date(dto.deadline!),
+      deadline: new Date(dto.deadline),
       team: users,
     });
     const saved = await this.projectRepo.save(project);
@@ -156,7 +153,6 @@ export class ProjectService {
     return this.mapProject(project);
   }
 
-
   async findOne(identifier: string) {
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -227,9 +223,6 @@ export class ProjectService {
     return { message: 'Project deleted successfully' };
   }
 
-
-
-
   async resolveUsers(team: string[]) {
     if (!team || team.length === 0) {
       throw new BadRequestException('Team cannot be empty');
@@ -270,5 +263,4 @@ export class ProjectService {
     }
     return users;
   }
-
 }

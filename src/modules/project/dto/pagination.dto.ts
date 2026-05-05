@@ -1,4 +1,3 @@
-// dto/pagination.dto.ts
 import { Type } from 'class-transformer';
 import { IsOptional, IsInt, Min } from 'class-validator';
 

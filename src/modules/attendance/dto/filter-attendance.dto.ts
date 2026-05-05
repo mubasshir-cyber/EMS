@@ -1,5 +1,3 @@
-// dto/filter-attendance.dto.ts
-
 import { IsOptional, IsNumberString } from 'class-validator';
 
 export class FilterAttendanceDto {
