@@ -236,6 +236,7 @@ export class AttendanceService {
       limit: Number(limit),
     };
   }
+  
   // ✅ Centralized response formatter
   private formatResponse(attendance: Attendance) {
     return {

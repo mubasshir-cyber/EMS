@@ -18,72 +18,163 @@ export class StandupsService {
     private userService: UserService,
   ) {}
 
-  async create(createStandupDto: CreateStandupDto) {
-    const { userId, date } = createStandupDto;
+  private isEmployee(user: any): boolean {
+    return user?.role === 'employee' || user?.role?.name === 'employee';
+  }
 
-    // 1️⃣ Validate user
-    const user = await this.userService.findOne(userId!);
+  private buildStandupQuery() {
+    return this.standupRepo
+      .createQueryBuilder('standup')
+      .leftJoinAndSelect('standup.user', 'user');
+  }
 
-    if (!user) {
-      throw new NotFoundException('User not found');
+  private async findStandupOrFail(id: string, user?: any) {
+    const query = this.buildStandupQuery();
+
+    // Find standup
+    query.where('standup.id = :id', {
+      id,
+    });
+
+    // Employee restriction
+    if (user && this.isEmployee(user)) {
+      query.andWhere('standup.userId = :userId', {
+        userId: user.id,
+      });
     }
 
-    // 2️⃣ Prevent duplicate standup
+    const standup = await query.getOne();
+
+    if (!standup) {
+      throw new NotFoundException('Standup not found or access denied');
+    }
+
+    return standup;
+  }
+
+  private async validateDuplicateStandup(userId: string, date: string) {
     const existing = await this.standupRepo.findOne({
-      where: { userId, date },
+      where: {
+        userId,
+        date,
+      },
     });
 
     if (existing) {
       throw new BadRequestException('Standup already submitted for this date');
     }
+  }
 
-    // 3️⃣ Create standup
+  private async findUserOrFail(userId: string) {
+    const user = await this.userService.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  private mapStandup(standup: Standup) {
+    return {
+      id: standup.id,
+
+      date: standup.date,
+
+      yesterdayWork: standup.yesterdayWork,
+
+      todayWork: standup.todayWork,
+
+      blockers: standup.blockers,
+
+      createdAt: standup.createdAt,
+
+      updatedAt: standup.updatedAt,
+
+      user: {
+        id: standup.user?.id,
+
+        name: `${standup.user?.first_name} ${standup.user?.last_name}`,
+
+        email: standup.user?.email,
+      },
+    };
+  }
+
+  private getPagination(page = 1, limit = 10) {
+    const safeLimit = Math.min(limit, 50);
+
+    return {
+      page,
+      limit: safeLimit,
+      skip: (page - 1) * safeLimit,
+    };
+  }
+
+  async create(dto: CreateStandupDto, user: any) {
+    // 1️⃣ Get logged-in user
+    const userId = user.id;
+
+    // 2️⃣ Validate user exists
+    await this.findUserOrFail(userId);
+
+    // 3️⃣ Prevent duplicate standup
+    await this.validateDuplicateStandup(userId, dto.date);
+
+    // 4️⃣ Create standup entity
     const standup = this.standupRepo.create({
-      ...createStandupDto,
+      ...dto,
       userId,
     });
 
-    // 4️⃣ Save
+    // 5️⃣ Save standup
     const saved = await this.standupRepo.save(standup);
 
-    return saved;
+    // 6️⃣ Return formatted response
+    return this.findOne(saved.id, user);
   }
 
-  async findAll(query: {
-    userId?: string;
-    date?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    const page = query.page ?? 1;
-    const limit = Math.min(query.limit ?? 10, 50);
+  async findAll(
+    query: {
+      date?: string;
+      mine?: string;
+      page?: number;
+      limit?: number;
+    },
+    user: any,
+  ) {
+   
+    const { page, limit, skip } = this.getPagination(query.page, query.limit);
 
-    const qb = this.standupRepo
-      .createQueryBuilder('standup')
-      .leftJoinAndSelect('standup.user', 'user')
-      .orderBy('standup.createdAt', 'DESC');
+    
+    const qb = this.buildStandupQuery();
 
-    // ✅ Filter by userId
-    if (query.userId) {
+   
+    const shouldFilterMine = this.isEmployee(user) || query.mine === 'true';
+
+    if (shouldFilterMine) {
       qb.andWhere('standup.userId = :userId', {
-        userId: query.userId,
+        userId: user.id,
       });
     }
 
-    // ✅ Filter by date
+    // 4️⃣ Optional date filter
     if (query.date) {
       qb.andWhere('standup.date = :date', {
         date: query.date,
       });
     }
 
-    const [data, total] = await qb
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+    
+    qb.orderBy('standup.createdAt', 'DESC');
 
+    
+    const [data, total] = await qb.skip(skip).take(limit).getManyAndCount();
+
+    // 7️⃣ Return response
     return {
-      data: data.map((s) => this.mapStandup(s)),
+      data: data.map((standup) => this.mapStandup(standup)),
+
       meta: {
         total,
         page,
@@ -92,77 +183,47 @@ export class StandupsService {
       },
     };
   }
+  async findOne(id: string, user: any) {
+    // 1️⃣ Find standup + validate access
+    const standup = await this.findStandupOrFail(id, user);
 
-  async findOne(id: string) {
-    const standup = await this.standupRepo
-      .createQueryBuilder('standup')
-      .leftJoinAndSelect('standup.user', 'user')
-      .where('standup.id = :id', { id })
-      .getOne();
-
-    if (!standup) {
-      throw new NotFoundException('Standup not found');
-    }
-
+    // 2️⃣ Return formatted response
     return this.mapStandup(standup);
   }
 
-  async update(id: string, dto: UpdateStandupDto) {
-    const standup = await this.standupRepo.findOne({
-      where: { id },
-    });
+  async update(id: string, dto: UpdateStandupDto, user: any) {
+    // 1️⃣ Find standup + validate access
+    const standup = await this.findStandupOrFail(id, user);
 
-    if (!standup) {
-      throw new NotFoundException('Standup not found');
+    // 2️⃣ Prevent updating restricted fields
+    if (dto.date !== undefined) {
+      throw new BadRequestException('date cannot be updated');
     }
 
-    // ❗ Prevent changing userId + date (important)
-    if (dto.userId || dto.date) {
-      throw new BadRequestException('userId and date cannot be updated');
-    }
-
-    // ✅ Update fields
+    // 3️⃣ Update editable fields
     standup.yesterdayWork = dto.yesterdayWork ?? standup.yesterdayWork;
 
     standup.todayWork = dto.todayWork ?? standup.todayWork;
 
     standup.blockers = dto.blockers ?? standup.blockers;
 
+    // 4️⃣ Save standup
     const saved = await this.standupRepo.save(standup);
 
+    // 5️⃣ Return formatted response
     return this.mapStandup(saved);
   }
 
-  async remove(id: string) {
-    const standup = await this.standupRepo.findOne({
-      where: { id },
-    });
+  async remove(id: string, user: any) {
+    // 1️⃣ Find standup + validate access
+    const standup = await this.findStandupOrFail(id, user);
 
-    if (!standup) {
-      throw new NotFoundException('Standup not found');
-    }
-
+    // 2️⃣ Delete standup
     await this.standupRepo.remove(standup);
 
+    // 3️⃣ Return response
     return {
       message: 'Standup deleted successfully',
-    };
-  }
-
-  private mapStandup(standup: Standup) {
-    return {
-      id: standup.id,
-      date: standup.date,
-      yesterdayWork: standup.yesterdayWork,
-      todayWork: standup.todayWork,
-      blockers: standup.blockers,
-      createdAt: standup.createdAt,
-
-      user: {
-        id: standup.user?.id,
-        name: `${standup.user?.first_name} ${standup.user?.last_name}`,
-        email: standup.user?.email,
-      },
     };
   }
 }

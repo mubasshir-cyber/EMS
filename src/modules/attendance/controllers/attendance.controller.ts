@@ -6,9 +6,10 @@ import { CheckInDto } from '../dto/check-In.dto';
 import { CheckOutDto } from '../dto/check-out.dto';
 
 import { CorrectionRequestDto } from '../dto/correction-request.dto';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles/roles.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('attendance')
 export class AttendanceController {
   constructor(

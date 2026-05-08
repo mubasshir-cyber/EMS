@@ -12,8 +12,9 @@ import { CorrectionService } from '../services/correction.service';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { CorrectionStatus } from '../../../common/enums/CorrectionStatus.enum';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/common/guards/roles/roles.guard';
 
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('admin', 'manager')
 @Controller('hr/attendance')
 export class HrAttendanceController {

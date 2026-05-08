@@ -14,15 +14,6 @@ export class Task1777834417302 implements MigrationInterface {
 
 
     await queryRunner.query(`
-      CREATE TYPE "task_status_enum" AS ENUM (
-        'inProgress',
-        'inReview',
-        'completed',
-        'critical'
-      );
-    `);
-
-    await queryRunner.query(`
       CREATE TABLE "tasks" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "title" varchar NOT NULL,

@@ -42,7 +42,6 @@ export class UserController {
     return this.userService.update(id, updateUserDto);
   }
 
-  // @Roles(RoleEnum.ADMIN, RoleEnum.MANAGER)
   @Roles('admin', 'manager')
   @Delete(':id')
   remove(@Param('id') id: string) {

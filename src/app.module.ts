@@ -10,14 +10,18 @@ import { ProjectModule } from './modules/project/project.module';
 import { TaskModule } from './modules/task/task.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { StandupsModule } from './modules/standups/standups.module';
+import { ReportsModule } from './modules/reports/reports.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
     }),
 
     TypeOrmModule.forRoot({
+
       type: 'postgres',
       host: process.env.DB_HOST,
       port: 5432,
@@ -27,7 +31,6 @@ import { StandupsModule } from './modules/standups/standups.module';
       entities: ['dist/**/*.entity.js'],
       synchronize: false,
     }),
-
     UserModule,
     AuthModule,
     RoleModule,
@@ -35,8 +38,10 @@ import { StandupsModule } from './modules/standups/standups.module';
     TaskModule,
     AttendanceModule,
     StandupsModule,
+    ReportsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
+

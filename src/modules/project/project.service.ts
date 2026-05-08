@@ -3,6 +3,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -38,12 +39,9 @@ export class ProjectService {
       team: users,
     });
     const saved = await this.projectRepo.save(project);
-    return this.findOne(saved.id);
+    return this.findProject({ id: saved.id });
   }
 
-  // =========================
-  // ✅ DATE VALIDATION
-  // =========================
   private validateDates(projectStartDate?: string, deadline?: string) {
     if (projectStartDate && deadline) {
       if (new Date(projectStartDate) > new Date(deadline)) {
@@ -54,40 +52,27 @@ export class ProjectService {
     }
   }
 
-  // async findAll(pagination?: PaginationDto) {
-  //   const page = pagination?.page ?? 1;
-  //   const limit = Math.min(pagination?.limit ?? 10, 50);
 
-  //   const [data, total] = await this.projectRepo.findAndCount({
-  //     relations: ['team', 'team.role'],
-  //     skip: (page - 1) * limit,
-  //     take: limit,
-  //     order: { createdAt: 'DESC' },
-  //   });
-
-  //   return {
-  //     data,
-  //     meta: {
-  //       total,
-  //       page,
-  //       limit,
-  //       totalPages: Math.ceil(total / limit),
-  //     },
-  //   };
-  // }
-
-  async findAll(pagination?: PaginationDto) {
+  async findAll(pagination: PaginationDto, user: any) {
     const page = pagination?.page ?? 1;
     const limit = Math.min(pagination?.limit ?? 10, 50);
 
-    const [projects, total] = await this.projectRepo
+    const query = this.projectRepo
       .createQueryBuilder('project')
-      .leftJoinAndSelect('project.team', 'user')
-      .leftJoinAndSelect('user.role', 'role')
-      .orderBy('project.createdAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+      .leftJoinAndSelect('project.team', 'team')
+      .leftJoinAndSelect('team.role', 'role')
+      .orderBy('project.createdAt', 'DESC');
+
+    // Employee can only see assigned projects
+    if (user.role === 'employee') {
+      query.andWhere('team.id = :userId', {
+        userId: user.id,
+      });
+    }
+
+    query.skip((page - 1) * limit).take(limit);
+
+    const [projects, total] = await query.getManyAndCount();
 
     return {
       data: projects.map((p) => this.mapProject(p)),
@@ -125,7 +110,7 @@ export class ProjectService {
       .leftJoin('project.team', 'user')
       .leftJoin('user.role', 'role')
       .select([
-        // Project fields
+        
         'project.id',
         'project.project_name',
         'project.project_description',
@@ -133,13 +118,12 @@ export class ProjectService {
         'project.projectStartDate',
         'project.deadline',
 
-        // User fields
         'user.id',
         'user.first_name',
         'user.last_name',
         'user.email',
 
-        // Role field
+        
         'role.name',
       ])
       .where('project.id = :id', { id })
@@ -153,14 +137,7 @@ export class ProjectService {
     return this.mapProject(project);
   }
 
-  async findOne(identifier: string) {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-    const whereCondition = uuidRegex.test(identifier)
-      ? { id: identifier }
-      : { project_name: identifier };
-
+  private async findProject(whereCondition: any) {
     const project = await this.projectRepo.findOne({
       where: whereCondition,
       relations: ['team', 'team.role'],
@@ -171,6 +148,61 @@ export class ProjectService {
     }
 
     return this.mapProject(project);
+  }
+
+  async findOne(identifier: string, user: any) {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    const query = this.projectRepo
+      .createQueryBuilder('project')
+      .leftJoinAndSelect('project.team', 'team')
+      .leftJoinAndSelect('team.role', 'role');
+
+    if (uuidRegex.test(identifier)) {
+      query.where('project.id = :identifier', { identifier });
+    } else {
+      query.where('project.project_name = :identifier', {
+        identifier,
+      });
+    }
+
+    if (user.role === 'employee') {
+      query.andWhere('team.id = :userId', {
+        userId: user.id,
+      });
+    }
+
+    const project = await query.getOne();
+
+    if (!project) {
+      throw new NotFoundException('Project not found or access denied');
+    }
+
+    return this.mapProject(project);
+  }
+
+  async getEmployeeProjectStats(employeeId: string) {
+    const stats = await this.projectRepo
+      .createQueryBuilder('project')
+      .leftJoin('project.team', 'team')
+      .select([
+        'COUNT(project.id) as total',
+        `COUNT(CASE WHEN project.status = 'active' THEN 1 END) as active`,
+        `COUNT(CASE WHEN project.status = 'completed' THEN 1 END) as completed`,
+        `COUNT(CASE WHEN project.status = 'on_hold' THEN 1 END) as on_hold`,
+        `COUNT(CASE WHEN project.status = 'pending' THEN 1 END) as pending`,
+      ])
+      .where('team.id = :employeeId', { employeeId })
+      .getRawOne();
+
+    return {
+      total: Number(stats.total),
+      active: Number(stats.active),
+      completed: Number(stats.completed),
+      on_hold: Number(stats.on_hold),
+      pending: Number(stats.pending),
+    };
   }
 
   parseDate(date?: string): Date | undefined {
