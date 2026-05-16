@@ -18,7 +18,7 @@ import { Role } from '../role/entities/role.entity';
     ConfigModule.forFeature(jwtConfig),
     UserModule,
   ],
-  controllers: [AuthController],
+  controllers: [AuthController],    
   providers: [AuthService, LocalStrategy, JwtStrategy],
   exports: [AuthService],
 })
