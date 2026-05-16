@@ -20,6 +20,10 @@ export class UserService {
     private roleRepo: Repository<Role>,
   ) {}
 
+  async updateHashedreFreshToken(userId: string, hashedRefreshToken: string | null) {
+    return await this.repo.update({ id: userId }, { hashedRefreshToken });
+  }
+
   async create(dto: CreateUserDto) {
     const roleName = (dto.role || 'employee').toLowerCase();
     const role = await this.roleRepo.findOne({
@@ -84,15 +88,32 @@ export class UserService {
     });
   }
 
+  async findProfile(id: string) {
+    return await this.repo.findOne({
+      where: { id },
+      relations: ['role'],
+    });
+  }
+
   async findOne(id: string) {
     const user = await this.repo.findOne({
       where: { id },
       relations: ['role'],
+      select: ['id', 'first_name', 'last_name', 'email', 'hashedRefreshToken'],
     });
 
-    if (!user) throw new NotFoundException('User not found');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
 
-    return user;
+    return {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      hashedRefreshToken: user.hashedRefreshToken,
+      role: user.role,
+    };
   }
 
   async update(id: string, dto: UpdateUserDto) {

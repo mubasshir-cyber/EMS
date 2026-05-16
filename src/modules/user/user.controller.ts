@@ -6,6 +6,7 @@ import {
   Body,
   Patch,
   Param,
+  Request,
   Delete,
   Query,
   UseGuards,
@@ -30,6 +31,12 @@ export class UserController {
   @Get()
   findAll(@Query() pagination: PaginationDto) {
     return this.userService.findAll(pagination);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    return this.userService.findProfile(req.user.id);
   }
 
   @Get(':id')

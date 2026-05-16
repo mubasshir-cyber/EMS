@@ -11,9 +11,9 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
-import { Task } from 'src/modules/task/entities/task.entity';
-import { Attendance } from 'src/modules/attendance/entities/attendance.entity';
-import { Standup } from 'src/modules/standups/entities/standup.entity';
+import { Task } from '../../../modules/task/entities/task.entity';
+import { Attendance } from '../../../modules/attendance/entities/attendance.entity';
+import { Standup } from '../../../modules/standups/entities/standup.entity';
 
 @Entity('users')
 export class User {
@@ -35,6 +35,12 @@ export class User {
   @Exclude()
   @Column()
   password!: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  hashedRefreshToken?: string | null;
 
   @ManyToOne(() => Role)
   @JoinColumn({ name: 'role_id' })

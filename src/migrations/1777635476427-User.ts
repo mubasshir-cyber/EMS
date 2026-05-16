@@ -10,6 +10,7 @@ export class User1777635476427 implements MigrationInterface {
         mobile VARCHAR,
         email VARCHAR UNIQUE NOT NULL,
         password VARCHAR NOT NULL,
+        "hashedRefreshToken" VARCHAR,
 
         role_id UUID,
 

@@ -10,16 +10,19 @@ import jwtConfig from 'src/config/jwt.config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserModule } from '../user/user.module';
 import { Role } from '../role/entities/role.entity';
+import refresh_jwtConfig from '../../config/refresh_jwt.config';
+import { RefreshJwtStrategy} from './strategies/refresh.strategy';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role]),
     JwtModule.registerAsync(jwtConfig.asProvider()),
     ConfigModule.forFeature(jwtConfig),
+    ConfigModule.forFeature(refresh_jwtConfig),
     UserModule,
   ],
-  controllers: [AuthController],    
-  providers: [AuthService, LocalStrategy, JwtStrategy],
+  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

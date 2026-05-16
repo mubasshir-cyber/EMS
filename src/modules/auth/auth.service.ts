@@ -1,16 +1,21 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 
 import { UserService } from '../user/user.service';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { AuthJwtPayload } from './types/auth-jwtPayload';
 import { CurrentUser } from './types/current.user';
+import refresh_jwtConfig from '../../config/refresh_jwt.config';
+import type { ConfigType } from '@nestjs/config';
+import * as argon2 from 'argon2';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userservice: UserService,
     private jwtService: JwtService,
+    @Inject(refresh_jwtConfig.KEY)
+    private refreshtokenConfig: ConfigType<typeof refresh_jwtConfig>,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -38,17 +43,24 @@ export class AuthService {
   }
 
   async login(user: { id: string; role: string; Username?: string }) {
-    const payload: AuthJwtPayload = {
-      sub: user.id,
-      role: user.role,
-    };
+    // const payload: AuthJwtPayload = {
+    //   sub: user.id,
+    //   role: user.role,
+    // };
+    // const token = this.jwtService.sign(payload);
+    // const refreshToken = this.jwtService.sign(payload, this.refreshtokenConfig);
 
     await this.userservice.updateLastLogin(user.id);
-
-    const token = this.jwtService.sign(payload);
-
+    const { accesstoken, refreshToken } = await this.generateToken(user);
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userservice.updateHashedreFreshToken(
+      user.id,
+      hashedRefreshToken,
+    );
     return {
-      access_token: token,
+      access_token: accesstoken,
+      Refresh_Token: refreshToken,
+
       user: {
         id: user.id,
         username: user.Username,
@@ -63,5 +75,69 @@ export class AuthService {
 
     const currentUser: CurrentUser = { id: user.id, role: user.role.name };
     return currentUser;
+  }
+
+  async refreshToken(userId: { id: string; role: string }) {
+    const { accesstoken, refreshToken } = await this.generateToken(userId);
+    const hashedRefreshToken = await argon2.hash(refreshToken);
+    await this.userservice.updateHashedreFreshToken(
+      userId.id,
+      hashedRefreshToken,
+    );
+    return {
+      access_token: accesstoken,
+      Refresh_Token: refreshToken,
+
+      user: {
+        id: userId.id,
+
+        role: userId.role,
+      },
+    };
+  }
+
+  async generateToken(userId: { id: string; role: string }) {
+    const payload: AuthJwtPayload = {
+      sub: userId.id,
+      role: userId.role,
+    };
+
+    const [accesstoken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(payload),
+      this.jwtService.signAsync(payload, this.refreshtokenConfig),
+    ]);
+
+    return {
+      accesstoken,
+      refreshToken,
+    };
+  }
+
+  async validateRefreshToken(userId: string, refreshToken: string) {
+    const user = await this.userservice.findOne(userId);
+    if (!user || !user.hashedRefreshToken)
+      throw new UnauthorizedException('yeh Refresh Token Galat Hai Mera Bhai , yeh fir logout hogya hai tu');
+
+    const MatchRefreshToken = await argon2.verify(
+      user.hashedRefreshToken,
+      refreshToken,
+    );
+    if (!MatchRefreshToken)
+      throw new UnauthorizedException(
+        'MERE BHAI REFRESH TOKEN SAME NHI HAI MERA BHAI ....!!!!',
+      );
+
+    return {
+      id: user.id,
+      role: user.role.name,
+    };
+  }
+
+  async logOut(userId: string) {
+    await this.userservice.updateHashedreFreshToken(userId, null);
+
+    return {
+      message: 'Logged out successfully',
+    };
   }
 }
