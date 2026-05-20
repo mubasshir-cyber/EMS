@@ -19,7 +19,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/pubilic.decorator';
 
 
-// @Public()
+@Public()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
