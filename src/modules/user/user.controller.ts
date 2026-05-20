@@ -15,10 +15,11 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginationDto } from '../project/dto/pagination.dto';
-import { Roles } from 'src/common/decorators/roles.decorator';
-// import { RolesGuard } from 'src/common/guards/roles/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/pubilic.decorator';
 
-// @UseGuards(JwtAuthGuard, RolesGuard)
+
+// @Public()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -33,7 +34,7 @@ export class UserController {
     return this.userService.findAll(pagination);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
     return this.userService.findProfile(req.user.id);

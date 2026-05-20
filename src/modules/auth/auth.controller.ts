@@ -9,10 +9,10 @@ import {
   Req,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalAuthGuard } from 'src/common/guards/local-auth/local-auth.guard';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { LocalAuthGuard } from '../../common/guards/local-auth/local-auth.guard';
 import { UserService } from '../user/user.service';
-import { RefreshAuthGuard } from 'src/common/guards/refresh-auth/refresh-auth.guard';
+import { RefreshAuthGuard } from '../../common/guards/refresh-auth/refresh-auth.guard';
+import { Public } from '../../common/decorators/pubilic.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +21,7 @@ export class AuthController {
     private userService: UserService,
   ) {}
 
+  @Public()
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -28,7 +29,7 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@Req() req) {
     return this.userService.findOne(req.user.id)
@@ -40,7 +41,7 @@ export class AuthController {
     return this.authService.refreshToken(req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Post('logout')
   logOut(@Req() req) {
     this.authService.logOut(req.user.id)

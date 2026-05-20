@@ -11,7 +11,8 @@ import { TaskModule } from './modules/task/task.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { StandupsModule } from './modules/standups/standups.module';
 import { ReportsModule } from './modules/reports/reports.module';
-
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -21,7 +22,6 @@ import { ReportsModule } from './modules/reports/reports.module';
     }),
 
     TypeOrmModule.forRoot({
-
       type: 'postgres',
       host: process.env.DB_HOST,
       port: 5432,
@@ -41,7 +41,12 @@ import { ReportsModule } from './modules/reports/reports.module';
     ReportsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule {}
-

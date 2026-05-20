@@ -8,6 +8,9 @@ import {
   JoinColumn,
   ManyToMany,
   OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
+  BeforeUpdate,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Exclude } from 'class-transformer';
@@ -55,13 +58,14 @@ export class User {
   @OneToMany(() => Standup, (standup) => standup.user)
   standups!: Standup[];
 
-  @Column()
+  @CreateDateColumn()
   createdAt!: Date;
 
-  @Column()
+  @UpdateDateColumn()
   updatedAt!: Date;
 
   @BeforeInsert()
+  @BeforeUpdate()
   async hashPassword() {
     this.password = await bcrypt.hash(this.password, 10);
   }

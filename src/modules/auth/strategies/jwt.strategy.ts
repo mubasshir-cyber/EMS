@@ -22,7 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: AuthJwtPayload) {
+  async validate(payload: AuthJwtPayload) {
     const userId = payload.sub;
     return this.authService.validateJWTUser(userId);
   }

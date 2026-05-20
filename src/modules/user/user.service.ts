@@ -20,7 +20,10 @@ export class UserService {
     private roleRepo: Repository<Role>,
   ) {}
 
-  async updateHashedreFreshToken(userId: string, hashedRefreshToken: string | null) {
+  async updateHashedreFreshToken(
+    userId: string,
+    hashedRefreshToken: string | null,
+  ) {
     return await this.repo.update({ id: userId }, { hashedRefreshToken });
   }
 
@@ -117,10 +120,6 @@ export class UserService {
   }
 
   async update(id: string, dto: UpdateUserDto) {
-    if (!dto.email && !dto.role) {
-      throw new BadRequestException('No fields provided for update');
-    }
-
     const user = await this.repo.findOne({
       where: { id },
       relations: ['role'],
@@ -130,7 +129,33 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    // ✅ Update role safely
+    // first_name
+    if (dto.first_name) {
+      user.first_name = dto.first_name.trim();
+    }
+
+    // last_name
+    if (dto.last_name) {
+      user.last_name = dto.last_name.trim();
+    }
+
+    // mobile
+    if (dto.mobile) {
+      user.mobile = dto.mobile.trim();
+    }
+
+    // email
+    if (dto.email) {
+      user.email = dto.email.toLowerCase().trim();
+    }
+
+    // password
+    if (dto.password) {
+      user.password = dto.password;
+      // BeforeUpdate hook will hash it
+    }
+
+    // role
     if (dto.role && user.role?.name !== dto.role.toLowerCase()) {
       const role = await this.roleRepo.findOne({
         where: { name: dto.role.toLowerCase() },
@@ -143,9 +168,9 @@ export class UserService {
       user.role = role;
     }
 
-    // ✅ Update email safely
-    if (dto.email) {
-      user.email = dto.email.toLowerCase().trim();
+    // last login
+    if (dto.lastLoginAt) {
+      user.lastLoginAt = dto.lastLoginAt;
     }
 
     return await this.repo.save(user);

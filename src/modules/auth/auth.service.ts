@@ -59,13 +59,13 @@ export class AuthService {
     );
     return {
       access_token: accesstoken,
-      Refresh_Token: refreshToken,
-
+      
       user: {
         id: user.id,
         username: user.Username,
         role: user.role,
       },
+      Refresh_Token: refreshToken,
     };
   }
 
@@ -137,7 +137,7 @@ export class AuthService {
     await this.userservice.updateHashedreFreshToken(userId, null);
 
     return {
-      message: 'Logged out successfully',
+      message: 'Logged out successfully Refresh token null',
     };
   }
 }
